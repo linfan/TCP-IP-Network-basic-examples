@@ -1,17 +1,23 @@
-#include <sys/types.h>     // system types
-#include <sys/socket.h>    // socket API
-#include <netinet/in.h>    // struct sockaddr_in
-#include <unistd.h>        // system call
+// system types
+#include <sys/types.h>    
+// socket API
+#include <sys/socket.h>   
+// struct sockaddr_in
+#include <netinet/in.h>   
+// system call
+#include <unistd.h>       
 #include <stdio.h>
 #include <time.h>
 #include <string.h>
 #include <errno.h>
 extern int errno;
 
-int errexit(const char* format, ...);  // Print error information
+// Print error information
+int errexit(const char* format, ...); 
 int passivesock(const char* service, const char* transport, int qlen);
 
-int passiveTCP(const char* service)    // Create passive TCP socket
+// Create passive TCP socket
+int passiveTCP(const char* service)   
 {
     return passivesock(service, "TCP", 1);
 }
@@ -19,8 +25,10 @@ int passiveTCP(const char* service)    // Create passive TCP socket
 // Handle temporary socket session
 void TCPdaytimed(int fd)
 {
-    char *pts;                         // Store time string
-    time_t now;                        // Current time
+    // Store time string
+    char *pts;                        
+    // Current time
+    time_t now;                       
     (void) time(&now);
     pts = ctime(&now);
     (void) send(fd, pts, strlen(pts), 0);
@@ -29,10 +37,14 @@ void TCPdaytimed(int fd)
 // Main function
 int main(int argc,char* argv[])
 {
-    struct sockaddr_in fsin;           // Service-end socket
-    char *service = "10086";           // was "daytime"
-    int msock, ssock;                  // permanent socket descriptor and temporary socket descriptor
-    unsigned int alen;                 // socket length
+    // Service-end socket
+    struct sockaddr_in fsin;          
+    // was "daytime"
+    char *service = "10086";          
+    // permanent socket descriptor and temporary socket descriptor
+    int msock, ssock;                 
+    // socket length
+    unsigned int alen;                
     switch (argc)
     {
         case 1:
@@ -44,7 +56,8 @@ int main(int argc,char* argv[])
             errexit("[SERVICE] usage: TCPdaytimed [port]\n");
     }
     fprintf(stderr, "[SERVICE] creating passive socket..\n");
-    msock = passiveTCP(service);       // Create passive TCP socket
+    // Create passive TCP socket
+    msock = passiveTCP(service);      
     fprintf(stderr, "[SERVICE] passive socket %d created.\n", msock);
     while(1)
     {

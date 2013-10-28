@@ -1,17 +1,25 @@
-#include <sys/socket.h>      // socket interface
-#include <sys/epoll.h>       // epoll interface
-#include <netinet/in.h>      // struct sockaddr_in
-#include <arpa/inet.h>       // IP addr convertion
-#include <fcntl.h>           // File descriptor controller
+// socket interface
+#include <sys/socket.h>     
+// epoll interface
+#include <sys/epoll.h>      
+// struct sockaddr_in
+#include <netinet/in.h>     
+// IP addr convertion
+#include <arpa/inet.h>      
+// File descriptor controller
+#include <fcntl.h>          
 #include <unistd.h>
 #include <stdio.h>
 #include <pthread.h>
-#include <string.h>          // bzero()
-#include <stdlib.h>          // malloc(), free()
+// bzero()
+#include <string.h>         
+// malloc(), free()
+#include <stdlib.h>         
 #include <errno.h>
 extern int errno;
 
-#define MAXBTYE     10       // maximum received data byte
+// maximum received data byte
+#define MAXBTYE     10      
 #define OPEN_MAX    100
 #define LISTENQ     20
 #define SERV_PORT   10012
@@ -19,28 +27,39 @@ extern int errno;
 #define LOCAL_ADDR  "127.0.0.1"
 #define TIMEOUT     500
 
-struct task                           // task item in thread pool
+// task item in thread pool
+struct task                          
 {
-    epoll_data_t data;         // file descriptor or user_data
-    struct task* next;                // next task
+    // file descriptor or user_data
+    epoll_data_t data;        
+    // next task
+    struct task* next;               
 };
 
-struct user_data                      // for data transporting
+// for data transporting
+struct user_data                     
 {
     int fd;
-    unsigned int n_size;              // real received data size
-    char line[MAXBTYE];               // content received
+    // real received data size
+    unsigned int n_size;             
+    // content received
+    char line[MAXBTYE];              
 };
 
 void *readtask(void *args);
 void *writetask(void *args);
 
-int epfd;                             // epoll descriptor from epoll_create()
-struct epoll_event ev;                // register epoll_ctl()
-struct epoll_event events[LISTENQ];   // store queued events from epoll_wait()
-pthread_mutex_t r_mutex;              // mutex lock to protect readhead/readtail
+// epoll descriptor from epoll_create()
+int epfd;                            
+// register epoll_ctl()
+struct epoll_event ev;               
+// store queued events from epoll_wait()
+struct epoll_event events[LISTENQ];  
+// mutex lock to protect readhead/readtail
+pthread_mutex_t r_mutex;             
 pthread_cond_t r_condl;
-pthread_mutex_t w_mutex;              // mutex lock to protect writehead/writetail
+// mutex lock to protect writehead/writetail
+pthread_mutex_t w_mutex;             
 pthread_cond_t w_condl;
 struct task *readhead = NULL, *readtail = NULL;
 struct task *writehead = NULL, *writetail = NULL;
@@ -57,11 +76,15 @@ void setnonblocking(int sock)
 
 int main(int argc,char* argv[])
 {
-    int i, maxi, nfds;                // nfds is number of events (number of returned fd)
+    // nfds is number of events (number of returned fd)
+    int i, maxi, nfds;               
     int listenfd, connfd;
-    pthread_t tid1, tid2;             // read task threads
-    pthread_t tid3, tid4;             // write back threads
-    struct task *new_task = NULL;     // task node
+    // read task threads
+    pthread_t tid1, tid2;            
+    // write back threads
+    pthread_t tid3, tid4;            
+    // task node
+    struct task *new_task = NULL;    
     socklen_t clilen;
     struct sockaddr_in clientaddr;
     struct sockaddr_in serveraddr;
@@ -78,12 +101,17 @@ int main(int argc,char* argv[])
     pthread_create(&tid3, NULL, writetask, NULL);
     pthread_create(&tid4, NULL, writetask, NULL);
 
-    epfd = epoll_create(256);         // epoll descriptor, for handling accept
+    // epoll descriptor, for handling accept
+    epfd = epoll_create(256);        
     listenfd = socket(PF_INET, SOCK_STREAM, 0);
-    setnonblocking(listenfd);         // set the descriptor as non-blocking
-    ev.data.fd = listenfd;            // event related descriptor
-    ev.events = EPOLLIN | EPOLLET;    // monitor in message, edge trigger
-    epoll_ctl(epfd, EPOLL_CTL_ADD, listenfd, &ev);     // register epoll event
+    // set the descriptor as non-blocking
+    setnonblocking(listenfd);        
+    // event related descriptor
+    ev.data.fd = listenfd;           
+    // monitor in message, edge trigger
+    ev.events = EPOLLIN | EPOLLET;   
+    // register epoll event
+    epoll_ctl(epfd, EPOLL_CTL_ADD, listenfd, &ev);    
 
     bzero(&serveraddr, sizeof(serveraddr));
     serveraddr.sin_family = AF_INET;
@@ -96,10 +124,13 @@ int main(int argc,char* argv[])
     maxi = 0;
     for(;;)
     {
-        nfds = epoll_wait(epfd, events, LISTENQ, TIMEOUT);      // waiting for epoll event
-        for (i = 0; i < nfds; ++i)    // In case of edge trigger, must go over each event
+        // waiting for epoll event
+        nfds = epoll_wait(epfd, events, LISTENQ, TIMEOUT);     
+        // In case of edge trigger, must go over each event
+        for (i = 0; i < nfds; ++i)   
         {
-            if (events[i].data.fd == listenfd)    // Get new connection
+            // Get new connection
+            if (events[i].data.fd == listenfd)   
             {
                 // accept the client connection
                 connfd = accept(listenfd, (struct sockaddr*)&clientaddr, &clilen);
@@ -108,10 +139,13 @@ int main(int argc,char* argv[])
                 setnonblocking(connfd);
                 echo("[SERVER] connect from %s \n", inet_ntoa(clientaddr.sin_addr));
                 ev.data.fd = connfd;
-                ev.events = EPOLLIN | EPOLLET;    // monitor in message, edge trigger
-                epoll_ctl(epfd, EPOLL_CTL_ADD, connfd, &ev);    // add fd to epoll queue
+                // monitor in message, edge trigger
+                ev.events = EPOLLIN | EPOLLET;   
+                // add fd to epoll queue
+                epoll_ctl(epfd, EPOLL_CTL_ADD, connfd, &ev);   
             }
-            else if (events[i].events & EPOLLIN)  // Received data
+            // Received data
+            else if (events[i].events & EPOLLIN) 
             {
                 if (events[i].data.fd < 0)
                     continue;
@@ -120,24 +154,29 @@ int main(int argc,char* argv[])
                 new_task->data.fd = events[i].data.fd;
                 new_task->next = NULL;
                 //echo("[SERVER] thread %d epollin before lock\n", pthread_self());
-                pthread_mutex_lock(&r_mutex);       // protect task queue (readhead/readtail)
+                // protect task queue (readhead/readtail)
+                pthread_mutex_lock(&r_mutex);      
                 //echo("[SERVER] thread %d epollin after lock\n", pthread_self());
-                if (readhead == NULL) // the queue is empty
+                // the queue is empty
+                if (readhead == NULL)
                 {
                     readhead = new_task;
                     readtail = new_task;
                 }
-                else                  // queue is not empty
+                // queue is not empty
+                else                 
                 {
                     readtail->next = new_task;
                     readtail = new_task;
                 }
-                pthread_cond_broadcast(&r_condl);   // trigger readtask thread
+                // trigger readtask thread
+                pthread_cond_broadcast(&r_condl);  
                 //echo("[SERVER] thread %d epollin before unlock\n", pthread_self());
                 pthread_mutex_unlock(&r_mutex);
                 //echo("[SERVER] thread %d epollin after unlock\n", pthread_self());
             }
-            else if (events[i].events & EPOLLOUT) // Have data to send
+            // Have data to send
+            else if (events[i].events & EPOLLOUT)
             {
                 if (events[i].data.ptr == NULL)
                     continue;
@@ -148,17 +187,20 @@ int main(int argc,char* argv[])
                 //echo("[SERVER] thread %d epollout before lock\n", pthread_self());
                 pthread_mutex_lock(&w_mutex);
                 //echo("[SERVER] thread %d epollout after lock\n", pthread_self());
-                if (writehead == NULL) // the queue is empty
+                // the queue is empty
+                if (writehead == NULL)
                 {
                     writehead = new_task;
                     writetail = new_task;
                 }
-                else                  // queue is not empty
+                // queue is not empty
+                else                 
                 {
                     writetail->next = new_task;
                     writetail = new_task;
                 }
-                pthread_cond_broadcast(&w_condl);   // trigger writetask thread
+                // trigger writetask thread
+                pthread_cond_broadcast(&w_condl);  
                 //echo("[SERVER] thread %d epollout before unlock\n", pthread_self());
                 pthread_mutex_unlock(&w_mutex);
                 //echo("[SERVER] thread %d epollout after unlock\n", pthread_self());
@@ -181,10 +223,12 @@ void *readtask(void *args)
     while(1)
     {
         //echo("[SERVER] thread %d readtask before lock\n", pthread_self());
-        pthread_mutex_lock(&r_mutex);  // protect task queue (readhead/readtail)
+        // protect task queue (readhead/readtail)
+        pthread_mutex_lock(&r_mutex); 
         //echo("[SERVER] thread %d readtask after lock\n", pthread_self());
         while(readhead == NULL)
-            pthread_cond_wait(&r_condl, &r_mutex);  // if condl false, will unlock mutex
+            // if condl false, will unlock mutex
+            pthread_cond_wait(&r_condl, &r_mutex); 
 
         fd = readhead->data.fd;
         struct task* tmp = readhead;
@@ -229,8 +273,10 @@ void *readtask(void *args)
             {
                 // modify monitored event to EPOLLOUT,  wait next loop to send respond
                 ev.data.ptr = data;
-                ev.events = EPOLLOUT | EPOLLET;     // Modify event to EPOLLOUT
-                epoll_ctl(epfd, EPOLL_CTL_MOD, fd, &ev);        // modify moditored fd event
+                // Modify event to EPOLLOUT
+                ev.events = EPOLLOUT | EPOLLET;    
+                // modify moditored fd event
+                epoll_ctl(epfd, EPOLL_CTL_MOD, fd, &ev);       
             }
         }
     }
@@ -239,14 +285,16 @@ void *readtask(void *args)
 void *writetask(void *args)
 {
     unsigned int n;
-    struct user_data *rdata = NULL;   // data to wirte back to client
+    // data to wirte back to client
+    struct user_data *rdata = NULL;  
     while(1)
     {
         //echo("[SERVER] thread %d writetask before lock\n", pthread_self());
         pthread_mutex_lock(&w_mutex);
         //echo("[SERVER] thread %d writetask after lock\n", pthread_self());
         while(writehead == NULL)
-            pthread_cond_wait(&w_condl, &w_mutex);  // if condl false, will unlock mutex
+            // if condl false, will unlock mutex
+            pthread_cond_wait(&w_condl, &w_mutex); 
 
         rdata = (struct user_data*)writehead->data.ptr;
         struct task* tmp = writehead;
@@ -274,10 +322,13 @@ void *writetask(void *args)
         {
             // modify monitored event to EPOLLIN, wait next loop to receive data
             ev.data.fd = rdata->fd;
-            ev.events = EPOLLIN | EPOLLET;    // monitor in message, edge trigger
-            epoll_ctl(epfd, EPOLL_CTL_MOD, rdata->fd, &ev);    // modify moditored fd event
+            // monitor in message, edge trigger
+            ev.events = EPOLLIN | EPOLLET;   
+            // modify moditored fd event
+            epoll_ctl(epfd, EPOLL_CTL_MOD, rdata->fd, &ev);   
         }
-        free(rdata);         // delete data
+        // delete data
+        free(rdata);        
     }
 }
 

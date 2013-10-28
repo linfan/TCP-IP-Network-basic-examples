@@ -1,9 +1,15 @@
-#include <sys/types.h>     // system types
-#include <sys/socket.h>    // socket API
-#include <netinet/in.h>    // struct sockaddr_in
-#include <arpa/inet.h>     // inet_ntoa()
-#include <unistd.h>        // system call
-#include <netdb.h>         // struct hostent and gethostbyname()
+// system types
+#include <sys/types.h>    
+// socket API
+#include <sys/socket.h>   
+// struct sockaddr_in
+#include <netinet/in.h>   
+// inet_ntoa()
+#include <arpa/inet.h>    
+// system call
+#include <unistd.h>       
+// struct hostent and gethostbyname()
+#include <netdb.h>        
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -12,8 +18,10 @@ extern int errno;
 #define BUFFSIZE 128
 #define PORT 10087
 
-int errexit(const char* format, ...);  // Print error information
-int echo(const char* format, ...);     // Print work information
+// Print error information
+int errexit(const char* format, ...); 
+// Print work information
+int echo(const char* format, ...);    
 
 char* getMessage(char* buffer, int len, FILE* fp)
 {
@@ -69,7 +77,8 @@ int main(int argc,char* argv[])
         default:
             errexit("usage: %s [host [port]]\n", argv[0]);
     }
-    if ((hent = gethostbyname(host)) == NULL)   // convert decimal IP to binary IP
+    // convert decimal IP to binary IP
+    if ((hent = gethostbyname(host)) == NULL)  
         errexit("gethostbyname failed.\n");
     if ((sock = socket(PF_INET, SOCK_STREAM, 0)) < 0)
         errexit("create socket failed: %s\n", strerror(errno));
@@ -84,7 +93,8 @@ int main(int argc,char* argv[])
         errexit("connect to server failed: %s\n", strerror(errno));
 
     echo("[CLIENT] connected to server %s\n", inet_ntoa(server.sin_addr));
-    process(stdin, sock);                       // Send request to server
+    // Send request to server
+    process(stdin, sock);                      
     close(sock);
 }
 

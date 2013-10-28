@@ -1,28 +1,42 @@
-#include <sys/types.h>   // system types
-#include <sys/socket.h>  // system socket define
-#include <netinet/in.h>  // struct sockaddr_in
-#include <netdb.h>       // Network related functions, e.g. gethostbyname()
-#include <stdarg.h>      // va_list
+// system types
+#include <sys/types.h>  
+// system socket define
+#include <sys/socket.h> 
+// struct sockaddr_in
+#include <netinet/in.h> 
+// Network related functions, e.g. gethostbyname()
+#include <netdb.h>      
+// va_list
+#include <stdarg.h>     
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 extern int errno;
 
-unsigned int portbase = 1024;     // Allow test multi-service on the machine using different port
+// Allow test multi-service on the machine using different port
+unsigned int portbase = 1024;    
 int passivesock(const char* service, const char* transport, int qlen)
 {
-    struct servent *pse;       // Store service entry return from getservbyname()
-    struct protoent *ppe;      // Store protocol entry return from getprotobyname()
-    struct sockaddr_in sin;    // Service-end socket
-    int s, type;               // Service-end socket descriptor and service type
+    // Store service entry return from getservbyname()
+    struct servent *pse;      
+    // Store protocol entry return from getprotobyname()
+    struct protoent *ppe;     
+    // Service-end socket
+    struct sockaddr_in sin;   
+    // Service-end socket descriptor and service type
+    int s, type;              
     memset(&sin, 0, sizeof(sin));
-    sin.sin_family = AF_INET;  // TCP/IP suite
-    sin.sin_addr.s_addr = INADDR_ANY;  // Use any local IP, need translate to internet byte order
+    // TCP/IP suite
+    sin.sin_family = AF_INET; 
+    // Use any local IP, need translate to internet byte order
+    sin.sin_addr.s_addr = INADDR_ANY; 
     // Get port number
-    if (pse = getservbyname(service, transport)) // service is service name
+    // service is service name
+    if (pse = getservbyname(service, transport))
         sin.sin_port = htons(ntohs((unsigned short)pse->s_port) + portbase);
-    else if((sin.sin_port = htons((unsigned short)atoi(service))) == 0) // service is port number
+    // service is port number
+    else if((sin.sin_port = htons((unsigned short)atoi(service))) == 0)
         errexit("can't get \"%s\" service entry\n", service);
     // Get protocol number
     if ((ppe = getprotobyname(transport)) == 0)

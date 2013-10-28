@@ -8,42 +8,61 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/wait.h>
-#include <arpa/inet.h>       // struct sockaddr_in
+// struct sockaddr_in
+#include <arpa/inet.h>      
 #include <pthread.h>
 
 #define PORT      10011
 #define LISTENQ   1024
-#define MAXLINE   10         // Max received message bytes
-#define MAXBTYE   4096       // Max reply message bytes
-#define MAXCLIENT 32         // Max accepted client at the same time
+// Max received message bytes
+#define MAXLINE   10        
+// Max reply message bytes
+#define MAXBTYE   4096      
+// Max accepted client at the same time
+#define MAXCLIENT 32        
 
 typedef struct 
 {
-    pthread_t thread_tid;    // thread id
-    long thread_count;       // connected client count
+    // thread id
+    pthread_t thread_tid;   
+    // connected client count
+    long thread_count;      
 } Thread;
 
-Thread *tptr;                // thread array (thread pool)
-int clifd[MAXCLIENT], iget, iput;    // client socket descriptor array
-int listenfd;                // socket descriptor in main thread
-int nthreads;                // total thread count
+// thread array (thread pool)
+Thread *tptr;               
+// client socket descriptor array
+int clifd[MAXCLIENT], iget, iput;   
+// socket descriptor in main thread
+int listenfd;               
+// total thread count
+int nthreads;               
 pthread_mutex_t clifd_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t clifd_cond = PTHREAD_COND_INITIALIZER;
 
-void pr_cpu_time(void);      // print user and system cpu time
-void web_child(int);         // handle connection
-void sig_int(int);           // SIGINT handler
-void* thread_main(void*);    // thread main function
-void thread_make(int);       // create sub-thread in thread pool
-ssize_t written(int, const void*, size_t);  // write buf content to socket
+// print user and system cpu time
+void pr_cpu_time(void);     
+// handle connection
+void web_child(int);        
+// SIGINT handler
+void sig_int(int);          
+// thread main function
+void* thread_main(void*);   
+// create sub-thread in thread pool
+void thread_make(int);      
+// write buf content to socket
+ssize_t written(int, const void*, size_t); 
 
 int main(int argc,char* argv[])
 {
     int i, navail, maxfd, nsel, connfd, rc;
     socklen_t clilen;
-    struct sockaddr_in servaddr;    // host info of server
-    struct sockaddr_in cliaddr;     // host info of client
-    const int ON = 1;               // value to enable SOL_SOCKET
+    // host info of server
+    struct sockaddr_in servaddr;   
+    // host info of client
+    struct sockaddr_in cliaddr;    
+    // value to enable SOL_SOCKET
+    const int ON = 1;              
 
     // initialize server socket
     listenfd = socket(PF_INET, SOCK_STREAM, 0);
@@ -56,7 +75,8 @@ int main(int argc,char* argv[])
     listen(listenfd, LISTENQ);
 
     // initialize thread pool
-    nthreads = 10;           // number of threads in the pool
+    // number of threads in the pool
+    nthreads = 10;          
     tptr = calloc(nthreads, sizeof(Thread));
     iget = iput = 0;
     for (i = 0; i < nthreads; ++i)
@@ -72,12 +92,15 @@ int main(int argc,char* argv[])
     {
         connfd = accept(listenfd, (struct sockaddr*)&cliaddr, &clilen);
         echo("[SERVICE] accept a connect from %s.\n", inet_ntoa(cliaddr.sin_addr));
-        pthread_mutex_lock(&clifd_mutex);   // protect clifd[] and iput/iget
+        // protect clifd[] and iput/iget
+        pthread_mutex_lock(&clifd_mutex);  
         //echo("[SERVER] get lock, thread = [main]\n");
-        clifd[iput] = connfd;               // iput point to next idle position
+        // iput point to next idle position
+        clifd[iput] = connfd;              
         if (++iput == MAXCLIENT)
             iput = 0;
-        if (iput == iget)                   // the queue overflowed
+        // the queue overflowed
+        if (iput == iget)                  
             errexit("[SERVER] Error: too much clients !");
         pthread_cond_signal(&clifd_cond);
         pthread_mutex_unlock(&clifd_mutex);
@@ -100,7 +123,8 @@ void* thread_main(void* arg)
     {
         pthread_mutex_lock(&clifd_mutex);
         //echo("[SERVER] get lock, thread = [%d]\n", t_id);
-        while (iget == iput)                // the connection queue is empty
+        // the connection queue is empty
+        while (iget == iput)               
             pthread_cond_wait(&clifd_cond, &clifd_mutex);
         //echo("[SERVER] thread [%d] wake up.\n", t_id);
         connfd = clifd[iget];
@@ -108,9 +132,12 @@ void* thread_main(void* arg)
             iget = 0;
         pthread_mutex_unlock(&clifd_mutex);
 
-        tptr[t_id].thread_count++;          // increase task count
-        web_child(connfd);                  // handle the request
-        close(connfd);                      // close this connection
+        // increase task count
+        tptr[t_id].thread_count++;         
+        // handle the request
+        web_child(connfd);                 
+        // close this connection
+        close(connfd);                     
     }
 }
 
@@ -143,14 +170,16 @@ void pr_cpu_time(void)
     user += (double)childusage.ru_utime.tv_sec + childusage.ru_utime.tv_usec/1000000.0;
     sys = (double)myusage.ru_stime.tv_sec + myusage.ru_stime.tv_usec/1000000.0;
     sys += (double)childusage.ru_stime.tv_sec + childusage.ru_stime.tv_usec/1000000.0;
-    echo("[SERVER] user time=%g, sys time=%g\n", user, sys);  // show total user time and system time
+    // show total user time and system time
+    echo("[SERVER] user time=%g, sys time=%g\n", user, sys); 
 }
 
 void web_child(int sockfd)
 {
     int ntowrite, n;
     ssize_t nread;
-    char line[MAXLINE], result[MAXBTYE];  // result array contain random charactors
+    // result array contain random charactors
+    char line[MAXLINE], result[MAXBTYE]; 
     for (;;)
     {
         if ((nread = recv(sockfd, line, MAXLINE, 0)) == 0)

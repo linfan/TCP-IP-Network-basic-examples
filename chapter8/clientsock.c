@@ -1,8 +1,13 @@
-#include <sys/types.h>     // system types
-#include <sys/socket.h>    // socket API
-#include <netinet/in.h>    // struct sockaddr_in
-#include <unistd.h>        // system call
-#include <arpa/inet.h>     // inet_addr()
+// system types
+#include <sys/types.h>    
+// socket API
+#include <sys/socket.h>   
+// struct sockaddr_in
+#include <netinet/in.h>   
+// system call
+#include <unistd.h>       
+// inet_addr()
+#include <arpa/inet.h>    
 #include <netdb.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -18,13 +23,16 @@ int clientsock(const char* host, const char* service, const char* transport, str
     struct protoent *ppe;
     struct sockaddr_in *sin;
     if (fsin == NULL)
-        sin = malloc(sizeof(struct sockaddr_in));   // Service address
+        // Service address
+        sin = malloc(sizeof(struct sockaddr_in));  
     else
         sin = fsin;
     int s, type;
     memset(sin, 0, sizeof(*sin));
-    sin->sin_family = AF_INET;                    // assign sin_family
-    sin->sin_addr.s_addr = inet_addr(host);       // assign sin_addr
+    // assign sin_family
+    sin->sin_family = AF_INET;                   
+    // assign sin_addr
+    sin->sin_addr.s_addr = inet_addr(host);      
     //echo("[CLIENT] Debug: service host : %lu (%s) \n", (unsigned long)sin->sin_addr.s_addr, host);
     // assign sin_port
     if (pse = getservbyname(service, transport))

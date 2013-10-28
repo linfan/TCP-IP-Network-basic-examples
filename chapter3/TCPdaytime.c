@@ -1,8 +1,13 @@
-#include <sys/types.h>     // system types
-//#include <sys/socket.h>    // socket API
-//#include <netinet/in.h>    // struct sockaddr_in
-//#include <arpa/inet.h>     // inet_addr()
-#include <unistd.h>        // system call
+// system types
+#include <sys/types.h>    
+// socket API
+//#include <sys/socket.h>   
+// struct sockaddr_in
+//#include <netinet/in.h>   
+// inet_addr()
+//#include <arpa/inet.h>    
+// system call
+#include <unistd.h>       
 #include <netdb.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -11,22 +16,27 @@
 extern int errno;
 #define BUFFSIZE 128
 
-int errexit(const char* format, ...);  // Print error information
+// Print error information
+int errexit(const char* format, ...); 
 
 
 // Handle socket session
 void TCPdaytime(const char* host, const char* service)
 {
     char buf[BUFFSIZE + 1];
-    int s, n;                         // Client-end socket descriptor, receive lenth
-    s = clientsock(host, service, "TCP", NULL);       // Create passive TCP socket
+    // Client-end socket descriptor, receive lenth
+    int s, n;                        
+    // Create passive TCP socket
+    s = clientsock(host, service, "TCP", NULL);      
     fprintf(stderr, "[CLIENT] socket %d created.\n", s);
     sleep(1);
     while((n = recv(s, buf, BUFFSIZE, 0)) > 0)
     {
         fprintf(stderr, "[CLIENT] %d data read: \n", n);
-        buf[n] = '\0';                // Add end of string symbol
-        (void) fputs(buf, stderr);    // Show received data to stdout
+        // Add end of string symbol
+        buf[n] = '\0';               
+        // Show received data to stdout
+        (void) fputs(buf, stderr);   
     }
     fprintf(stderr, "[CLIENT] data receive finish. \n");
 }
@@ -34,8 +44,10 @@ void TCPdaytime(const char* host, const char* service)
 // Main function
 int main(int argc,char* argv[])
 {
-    char *host = "127.0.0.1";         // was "localhost"
-    char *service = "10086";          // was "daytime"
+    // was "localhost"
+    char *host = "127.0.0.1";        
+    // was "daytime"
+    char *service = "10086";         
     switch (argc)
     {
         case 1:

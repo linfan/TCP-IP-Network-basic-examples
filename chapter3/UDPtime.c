@@ -1,19 +1,26 @@
-#include <sys/types.h>   // system types
-#include <sys/socket.h>  // system socket define
-#include <netinet/in.h>  // struct sockaddr_in
-#include <time.h>        // ctime(), without this headfile, we'll get a warning while compile and a segment fault when running
+// system types
+#include <sys/types.h>  
+// system socket define
+#include <sys/socket.h> 
+// struct sockaddr_in
+#include <netinet/in.h> 
+// ctime(), without this headfile, we'll get a warning while compile and a segment fault when running
+#include <time.h>       
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include <unistd.h>      // unix system call, e.g. write(), read()
+// unix system call, e.g. write(), read()
+#include <unistd.h>     
 
-#define UNIXEPOCH 2208988800UL // Time difference between Unit time and Internet time 
+// Time difference between Unit time and Internet time 
+#define UNIXEPOCH 2208988800UL
 #define BUFSIZE 64
 #define MSG "what time is it ?\n"
 extern int errno;
 
-int errexit(const char* format, ...); // Print error information
+// Print error information
+int errexit(const char* format, ...);
 
 int connectUDP(const char *host, const char *service, struct sockaddr_in* sin)
 {
@@ -23,10 +30,14 @@ int connectUDP(const char *host, const char *service, struct sockaddr_in* sin)
 // Main function
 int main(int argc, char *argv[])
 {
-    char *host = "127.0.0.1";   // Service IP, was "localhost"
-    char *service = "10010";    // Sercice name/port, was "time"
-    time_t now;                 // Store replied time
-    int s, n;                   // Socket descriptor and read data length
+    // Service IP, was "localhost"
+    char *host = "127.0.0.1";  
+    // Sercice name/port, was "time"
+    char *service = "10010";   
+    // Store replied time
+    time_t now;                
+    // Socket descriptor and read data length
+    int s, n;                  
     switch(argc)
     {
         case 1:
@@ -42,8 +53,10 @@ int main(int argc, char *argv[])
             errexit("usage: UDPtime [host [port]]\n");
     }
 
-    struct sockaddr_in sin;     // Service-end socket address
-    s = connectUDP(host, service, &sin);     // conncet to service
+    // Service-end socket address
+    struct sockaddr_in sin;    
+    // conncet to service
+    s = connectUDP(host, service, &sin);    
 
     fprintf(stderr, "[CLIENT] sending message to service..\n");
     // write to service by socket
@@ -56,8 +69,10 @@ int main(int argc, char *argv[])
     if (n < 0)
         errexit("read failed: %s\n", strerror(errno));
 
-    now = ntohl((unsigned long)now);  // Convert to host byte order
-    now -= UNIXEPOCH;                 // Convert to host time
+    // Convert to host byte order
+    now = ntohl((unsigned long)now); 
+    // Convert to host time
+    now -= UNIXEPOCH;                
     fprintf(stderr, "[CLIENT] now time is : %s\n", ctime(&now));
 
     return 0;
