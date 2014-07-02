@@ -1,19 +1,19 @@
 all: TCPdaytimed TCPdaytime UDPtimed UDPtime PrintAllServByPort
 
 TCPdaytimed : TCPdaytimed.o passivesock.o errexit.o
-	gcc -o $@ $<
+	gcc -o $@ $^
 
 TCPdaytime : TCPdaytime.o clientsock.o errexit.o
-	gcc -o $@ $<
+	gcc -o $@ $^
 
 UDPtimed : UDPtimed.o passivesock.o errexit.o
-	gcc -o $@ $<
+	gcc -o $@ $^
 
 UDPtime : UDPtime.o clientsock.o errexit.o
-	gcc -o $@ $<
+	gcc -o $@ $^
 
 PrintAllServByPort: PrintAllServByPort.o
-	gcc -o $@ $<
+	gcc -o $@ $^
 
 %.o : %.c
 	gcc -c -g -o $@ $<
